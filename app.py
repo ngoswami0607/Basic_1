@@ -104,7 +104,7 @@ st.markdown("---")
 # -----------------------
 # 3. RISK CATEGORY
 # -----------------------
-st.header("4️⃣ Risk Category")
+st.header("3️⃣ Risk Category")
 
 risk_map = {
     "I": "Low risk to human life (e.g., storage, barns).",
@@ -122,7 +122,7 @@ st.info(risk_map[risk_category])
 # -----------------------
 # 4. WIND SPEED
 # -----------------------
-st.header("3️⃣ Wind Speed")
+st.header("4️⃣ Wind Speed")
 
 st.markdown("""
 Get your project’s **basic wind speed (V)** from the official ASCE Hazard Tool:  
@@ -134,23 +134,6 @@ st.success(f"Using V = {V:.1f} mph")
 
 st.markdown("---")
 
-# -----------------------
-# 4. RISK CATEGORY
-# -----------------------
-st.header("4️⃣ Risk Category")
-
-risk_map = {
-    "I": "Low risk to human life (e.g., storage, barns).",
-    "II": "Typical occupancy (residential, commercial, offices).",
-    "III": "Substantial hazard to human life (schools, large assemblies).",
-    "IV": "Essential facilities (hospitals, emergency services)."
-}
-risk_category = st.selectbox(
-    "Select Risk Category:",
-    list(risk_map.keys()),
-    format_func=lambda x: f"Category {x} – {risk_map[x].split('(')[0]}"
-)
-st.info(risk_map[risk_category])
 
 # -----------------------
 # SUMMARY OUTPUT
