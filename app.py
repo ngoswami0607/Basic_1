@@ -102,7 +102,25 @@ st.info(f"Using **{asce_code}** for component & cladding design per Chapter 30."
 st.markdown("---")
 
 # -----------------------
-# 3. WIND SPEED
+# 3. RISK CATEGORY
+# -----------------------
+st.header("4️⃣ Risk Category")
+
+risk_map = {
+    "I": "Low risk to human life (e.g., storage, barns).",
+    "II": "Typical occupancy (residential, commercial, offices).",
+    "III": "Substantial hazard to human life (schools, large assemblies).",
+    "IV": "Essential facilities (hospitals, emergency services)."
+}
+risk_category = st.selectbox(
+    "Select Risk Category:",
+    list(risk_map.keys()),
+    format_func=lambda x: f"Category {x} – {risk_map[x].split('(')[0]}"
+)
+st.info(risk_map[risk_category])
+
+# -----------------------
+# 4. WIND SPEED
 # -----------------------
 st.header("3️⃣ Wind Speed")
 
