@@ -88,19 +88,51 @@ st.plotly_chart(fig, use_container_width=True)
 
 st.markdown("---")
 
-# -----------------------
-# 2. CODE JURISDICTION
-# -----------------------
-st.header("2️⃣ Code Jurisdiction (ASCE Edition)")
-asce_code = st.selectbox(
-    "Select applicable ASCE Standard:",
-    ["ASCE 7-10", "ASCE 7-16", "ASCE 7-22"],
-    index=1
-)
-st.info(f"Using **{asce_code}** for component & cladding design per Chapter 30.")
+st.header("2️⃣ Code Jurisdiction")
 
-st.markdown("---")
+location = st.text_input("📍 Enter Project Location (City, State or ZIP):", placeholder="e.g., Chicago, IL or 77002")
 
+# Placeholder function — you’ll need real API endpoint & key
+def lookup_icc_adoption(location_str, api_key):
+    # In a real implementation you'd parse the location into state/county,
+    # call the ICC “ImageCode Adoption Database” API with query parameters.
+    # Here is a dummy placeholder to illustrate.
+    try:
+        query = urllib.parse.quote(location_str)
+        url = f"https://api.iccsafe.org/adoption/v1/jurisdictions?search={query}&key={api_key}"
+        resp = requests.get(url, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            if data and "items" in data and len(data["items"]) > 0:
+                # assume first item
+                adoption = data["items"][0]
+                return {
+                    "jurisdiction": adoption.get("name"),
+                    "IBC": adoption.get("code_title"),
+                    "IBC_effective": adoption.get("effective_date"),
+                }
+    except Exception as e:
+        st.error(f"Lookup failed: {e}")
+    return None
+
+api_key = st.text_input("Enter your ICC API Key (for automated lookup)", type="password")
+
+adoption_info = None
+if location and api_key:
+    with st.spinner("Attempting to lookup code adoption..."):
+        adoption_info = lookup_icc_adoption(location, api_key)
+
+if adoption_info:
+    st.success(f"Found jurisdiction: {adoption_info['jurisdiction']}")
+    st.write(f"Adopted IBC Edition: **{adoption_info['IBC']}** (effective {adoption_info['IBC_effective']})")
+    # As the ASCE version may not be in API, ask user manually:
+    asce_code = st.selectbox("Select applicable ASCE 7 Edition:", ["ASCE 7-10", "ASCE 7-16", "ASCE 7-22"])
+else:
+    st.info("Automatic lookup not successful. Please select code editions manually:")
+    ibc_code = st.selectbox("Select IBC Edition:", ["IBC 2015", "IBC 2018", "IBC 2021", "IBC 2024"])
+    asce_code = st.selectbox("Select applicable ASCE 7 Edition:", ["ASCE 7-10", "ASCE 7-16", "ASCE 7-22"])
+
+st.write(f"Using IBC: **{ibc_code if not adoption_info else adoption_info['IBC']}**, ASCE 7: **{asce_code}**")
 # -----------------------
 # 3. RISK CATEGORY
 # -----------------------
