@@ -8,6 +8,7 @@ import urllib.parse
 import json 
 import openai 
 import io
+import re
 
 # --- Function to extract ICC adoption data directly from the PDF ---
 @st.cache_data(show_spinner=True)
@@ -58,28 +59,46 @@ def load_icc_table_pdfplumber():
 # --- Helper Function: Extract Relevant Codes ---
 def extract_relevant_codes(code_text):
     """
-    Extracts building, IBC, ASCE 7, IECC, and ASHRAE codes from the raw text string.
+    Extract building, IBC, ASCE 7, IECC, and ASHRAE codes from the text.
+    Works with both keyword-based and compressed numeric-only formats.
     """
-    building_code = ""
-    ibc_code = ""
-    asce_code = ""
-    iecc_code = ""
-    ashrae_code = ""
+    # Normalize
+    text = code_text.upper().replace("–", "-").replace("—", "-")
 
-    # Simple pattern search (can refine later)
-    if "Building" in code_text or "Code" in code_text:
-        building_code = code_text
-    if "IBC" in code_text:
-        ibc_code = code_text
-    if "ASCE" in code_text:
-        asce_code = code_text
-    if "IECC" in code_text:
-        iecc_code = code_text
-    if "ASHRAE" in code_text or "90.1" in code_text:
-        ashrae_code = code_text
+    # Initialize
+    building_code = ibc_code = asce_code = iecc_code = ashrae_code = ""
+
+    # --- 1️⃣ Try to extract by keywords ---
+    ibc_match = re.search(r"IBC\s*(19|20)\d{2}", text)
+    asce_match = re.search(r"ASCE\s*7[-–]\s*(\d{2})", text)
+    iecc_match = re.search(r"IECC\s*(19|20)\d{2}", text)
+    ashrae_match = re.search(r"(ASHRAE|90\.1)[-\s]*(19|20)\d{2}", text)
+
+    if ibc_match:
+        ibc_code = f"IBC {ibc_match.group(0).split()[-1]}"
+    if asce_match:
+        asce_code = f"ASCE 7-{asce_match.group(1)}"
+    if iecc_match:
+        iecc_code = f"IECC {iecc_match.group(0).split()[-1]}"
+    if ashrae_match:
+        ashrae_code = f"ASHRAE 90.1-{ashrae_match.group(2)}"
+    if ibc_code:
+        building_code = ibc_code
+
+    # --- 2️⃣ Fallback: numeric compressed form like “15 X 15 09 15 15” ---
+    if not any([ibc_code, asce_code, iecc_code, ashrae_code]):
+        years = re.findall(r'\b(0[9]|1[0-9]|2[0-5])\b', text)
+        if len(years) >= 1:
+            ibc_code = f"IBC 20{years[0]}"
+            building_code = f"Building Code 20{years[0]}"
+        if len(years) >= 2:
+            asce_code = f"ASCE 7-20{years[1]}"
+        if len(years) >= 3:
+            iecc_code = f"IECC 20{years[2]}"
+        if len(years) >= 4:
+            ashrae_code = f"ASHRAE 90.1-20{years[3]}"
 
     return building_code, ibc_code, asce_code, iecc_code, ashrae_code
-
 
 # --- Streamlit App ---
 st.title("US State Building Code Finder 🏗️")
