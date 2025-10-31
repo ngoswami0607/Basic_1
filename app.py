@@ -73,10 +73,10 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 st.markdown("---")
 
-# ----------------------------------------------------
-# 2️⃣  Code Jurisdiction / Adoption Lookup
-# ----------------------------------------------------
-
+----------------------------------------------------
+2️⃣  Code Jurisdiction / Adoption Lookup
+----------------------------------------------------
+st.header("2️⃣ Code Jurisdiction Lookup")
 
 # --- Function to extract ICC adoption data directly from the PDF ---
 @st.cache_data(show_spinner=True)
