@@ -10,6 +10,74 @@ import openai
 import io
 import re
 
+
+st.set_page_config(page_title="Wind Load Calculator", layout="centered")
+
+st.title("🌪️ Wind Load Calculator (ASCE 7)")
+
+st.markdown("""
+This calculator helps you organize inputs for **ASCE 7 wind load determination**.  
+It guides you to the [ASCE Hazard Tool](https://ascehazardtool.org/) for site-specific wind speeds  
+and visualizes your building dimensions in 3D.
+""")
+st.markdown("---")
+
+# ----------------------------------------------------
+# 1️⃣  Building Dimensions
+# ----------------------------------------------------
+st.header("1️⃣ Building Dimensions")
+
+col1, col2, col3 = st.columns(3)
+least_width = col1.number_input("Least Width (ft)", min_value=0.0, value=30.0, format="%.2f")
+longest_width = col2.number_input("Longest Width (ft)", min_value=0.0, value=80.0, format="%.2f")
+height = col3.number_input("Mean Roof Height (ft)", min_value=0.0, value=30.0, format="%.2f")
+
+st.markdown(f"""
+**Summary:**  
+- Least Width (x): `{least_width} ft`  
+- Longest Width (y): `{longest_width} ft`  
+- Height (z): `{height} ft`
+""")
+
+# ----------------------------------------------------
+# 3D CUBE VISUALIZATION
+# ----------------------------------------------------
+st.subheader("📦 Building Shape Visualization")
+
+x = [0, least_width, least_width, 0, 0, least_width, least_width, 0]
+y = [0, 0, longest_width, longest_width, 0, 0, longest_width, longest_width]
+z = [0, 0, 0, 0, height, height, height, height]
+faces = [
+    [0,1,2,3],[4,5,6,7],[0,1,5,4],[2,3,7,6],[1,2,6,5],[0,3,7,4]
+]
+
+fig = go.Figure()
+for f in faces:
+    fig.add_trace(go.Mesh3d(
+        x=[x[i] for i in f],
+        y=[y[i] for i in f],
+        z=[z[i] for i in f],
+        color='lightblue', opacity=0.5, showscale=False
+    ))
+
+fig.update_layout(
+    scene=dict(
+        xaxis_title='Width (ft)', yaxis_title='Length (ft)', zaxis_title='Height (ft)',
+        aspectmode='data',
+        xaxis=dict(nticks=4, backgroundcolor="white"),
+        yaxis=dict(nticks=4, backgroundcolor="white"),
+        zaxis=dict(nticks=4, backgroundcolor="white"),
+    ),
+    width=600, height=500, margin=dict(r=10, l=10, b=10, t=10)
+)
+st.plotly_chart(fig, use_container_width=True)
+st.markdown("---")
+
+# ----------------------------------------------------
+# 2️⃣  Code Jurisdiction / Adoption Lookup
+# ----------------------------------------------------
+
+
 # --- Function to extract ICC adoption data directly from the PDF ---
 @st.cache_data(show_spinner=True)
 def load_icc_table_pdfplumber():
