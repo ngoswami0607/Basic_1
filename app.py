@@ -90,46 +90,31 @@ st.plotly_chart(fig, use_container_width=True)
 
 st.markdown("---")
 
+st.header("2️⃣ Code Jurisdiction")
 st.title("Building Code Edition Lookup")
 
-# 1. User input location
-location_input = st.text_input("Enter project location (address, city/state, or ZIP)")
+# List of all U.S. states and D.C.
+states = [
+    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+    "Connecticut", "Delaware", "District of Columbia", "Florida", "Georgia",
+    "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky",
+    "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
+    "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+    "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota",
+    "Ohio", "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island",
+    "South Carolina", "South Dakota", "Tennessee", "Texas", "Utah", "Vermont",
+    "Virginia", "Washington", "West Virginia", "Wisconsin", "Wyoming"
+]
 
-st.title("Building Code Edition Lookup")
+st.title("Building Code Lookup by State")
 
-location_input = st.text_input("Enter project location (city, state, or ZIP):")
+state = st.selectbox("Select the project location (State):", states)
 
-if st.button("Lookup Codes"):
-    if not location_input:
-        st.error("Please enter a location.")
-    else:
-        st.info("Geocoding location…")
+st.write(f"You selected: **{state}**")
 
-        geocode_url = "https://nominatim.openstreetmap.org/search"
-        params = {"q": location_input, "format": "json", "limit": 1}
-        headers = {"User-Agent": "streamlit-code-lookup-app"}
-
-        try:
-            resp = requests.get(geocode_url, params=params, headers=headers, timeout=10)
-            data = resp.json()
-
-            if resp.status_code != 200 or not data:
-                st.error("Could not geocode location. Try a more specific input (e.g. 'Dallas, TX').")
-            else:
-                geodata = data[0]
-                lat = geodata["lat"]
-                lon = geodata["lon"]
-                display_name = geodata["display_name"]
-
-                st.success(f"✅ Geocoded: {display_name}")
-                st.write(f"Latitude: {lat}, Longitude: {lon}")
-
-                # proceed with next step (jurisdiction lookup)
-        except Exception as e:
-            st.error(f"Error occurred: {e}")
-
-
-# st.header("2️⃣ Code Jurisdiction")
+if location_input:
+    st.info("Select the project’s state (based on the location above):")
+    state = st.selectbox("State:", states)
 
 # location = st.text_input("📍 Enter Project Location (City, State or ZIP):", placeholder="e.g., Chicago, IL or 77002")
 
