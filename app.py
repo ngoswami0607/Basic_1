@@ -144,46 +144,46 @@ else:
 
 st.markdown("---")
 
-# ----------------------------------------------------
-# 3️⃣  Risk Category
-# ----------------------------------------------------
-st.header("3️⃣ Risk Category")
-risk_map = {
-    "I": "Low risk to human life (e.g., storage, barns).",
-    "II": "Typical occupancy (residential, commercial, offices).",
-    "III": "Substantial hazard to human life (schools, assemblies).",
-    "IV": "Essential facilities (hospitals, emergency services)."
-}
-risk_category = st.selectbox("Select Risk Category:", list(risk_map.keys()),
-                             format_func=lambda x: f"Category {x} – {risk_map[x].split('(')[0]}")
-st.info(risk_map[risk_category])
+# # ----------------------------------------------------
+# # 3️⃣  Risk Category
+# # ----------------------------------------------------
+# st.header("3️⃣ Risk Category")
+# risk_map = {
+#     "I": "Low risk to human life (e.g., storage, barns).",
+#     "II": "Typical occupancy (residential, commercial, offices).",
+#     "III": "Substantial hazard to human life (schools, assemblies).",
+#     "IV": "Essential facilities (hospitals, emergency services)."
+# }
+# risk_category = st.selectbox("Select Risk Category:", list(risk_map.keys()),
+#                              format_func=lambda x: f"Category {x} – {risk_map[x].split('(')[0]}")
+# st.info(risk_map[risk_category])
 
-# ----------------------------------------------------
-# 4️⃣  Wind Speed
-# ----------------------------------------------------
-st.header("4️⃣ Wind Speed")
-st.markdown("Get site-specific wind speed from 👉 [ASCE Hazard Tool](https://ascehazardtool.org/)")
-V = st.number_input("Enter Basic Wind Speed (mph):", min_value=0.0, value=115.0, format="%.1f")
-st.success(f"Using V = {V:.1f} mph")
-st.markdown("---")
+# # ----------------------------------------------------
+# # 4️⃣  Wind Speed
+# # ----------------------------------------------------
+# st.header("4️⃣ Wind Speed")
+# st.markdown("Get site-specific wind speed from 👉 [ASCE Hazard Tool](https://ascehazardtool.org/)")
+# V = st.number_input("Enter Basic Wind Speed (mph):", min_value=0.0, value=115.0, format="%.1f")
+# st.success(f"Using V = {V:.1f} mph")
+# st.markdown("---")
 
-# ----------------------------------------------------
-# ✅  Summary Output
-# ----------------------------------------------------
-st.header("✅ Summary of Inputs")
+# # ----------------------------------------------------
+# # ✅  Summary Output
+# # ----------------------------------------------------
+# st.header("✅ Summary of Inputs")
 
-summary_table = f"""
-| Parameter | Value |
-|------------|--------|
-| Least Width | {least_width} ft |
-| Longest Width | {longest_width} ft |
-| Mean Roof Height | {height} ft |
-| IBC Edition | {ibc_val if 'ibc_val' in locals() else 'N/A'} |
-| ASCE 7 Edition | {asce if 'asce' in locals() else 'N/A'} |
-| IECC Edition | {iecc_val if 'iecc_val' in locals() else 'N/A'} |
-| ASHRAE 90.1 | {ashrae if 'ashrae' in locals() else 'N/A'} |
-| Risk Category | {risk_category} |
-| Basic Wind Speed | {V:.1f} mph |
-"""
-st.markdown(summary_table)
-st.caption("Developed for educational use. Always verify results per ASCE 7 and local code.")
+# summary_table = f"""
+# | Parameter | Value |
+# |------------|--------|
+# | Least Width | {least_width} ft |
+# | Longest Width | {longest_width} ft |
+# | Mean Roof Height | {height} ft |
+# | IBC Edition | {ibc_val if 'ibc_val' in locals() else 'N/A'} |
+# | ASCE 7 Edition | {asce if 'asce' in locals() else 'N/A'} |
+# | IECC Edition | {iecc_val if 'iecc_val' in locals() else 'N/A'} |
+# | ASHRAE 90.1 | {ashrae if 'ashrae' in locals() else 'N/A'} |
+# | Risk Category | {risk_category} |
+# | Basic Wind Speed | {V:.1f} mph |
+# """
+# st.markdown(summary_table)
+# st.caption("Developed for educational use. Always verify results per ASCE 7 and local code.")
