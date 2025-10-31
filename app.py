@@ -242,9 +242,9 @@ if not state_info.empty:
     code_text = state_info.iloc[0]["Code Info"]
     building_code, ibc_code, asce_code, iecc_code, ashrae_code = extract_relevant_codes(code_text)
 
-    st.subheader(f"📍 Building Code Summary for {selected_state}")
-    st.write(f"**Raw Extracted Info:** {code_text}")
-    st.markdown("---")
+    # st.subheader(f"📍 Building Code Summary for {selected_state}")
+    # st.write(f"**Raw Extracted Info:** {code_text}")
+    # st.markdown("---")
 
     st.markdown("### 🔍 Parsed Code References")
     st.write(f"**Building Code:** {building_code or 'N/A'}")
