@@ -276,10 +276,85 @@ V = st.number_input("Enter Basic Wind Speed (mph):", min_value=0.0, value=115.0,
 st.success(f"Using V = {V:.1f} mph") 
 st.markdown("---") 
 
-# ----------------------- 
-# SUMMARY OUTPUT
-# ----------------------- 
-st.markdown("---") 
-st.header("✅ Summary of Inputs")
-st.markdown(f""" | Parameter | Value | |------------|--------| | Least Width | {least_width} ft | | Longest Width | {longest_width} ft | | Mean Roof Height | {height} ft | | ASCE Edition | {asce_code} | | Risk Category | {risk_category} | | Basic Wind Speed | {V:.1f} mph | """) 
-st.markdown(""" You can now use these inputs for **ASCE 7 Chapter 30 (C&C)** or **Main Wind Force Resisting System** design. """)
+# ----------------------------------------------------
+# 5️⃣ BASIC WIND PRESSURE CALCULATION (ASCE 7-16)
+# ----------------------------------------------------
+st.header("5️⃣ Basic Wind Pressure Calculation (ASCE 7-16)")
+
+st.markdown("""
+### Formula
+\\[
+q = 0.00256 \\times K_z \\times K_{zt} \\times K_d \\times K_e \\times V^2
+\\]
+""")
+
+# --- Select Structure Type for Kd ---
+st.subheader("Select Structure Type (for Kd)")
+structure_types = {
+    "Main Wind Force Resisting System (Buildings)": 0.85,
+    "Components and Cladding": 0.85,
+    "Arched Roofs": 0.85,
+    "Circular Domes": 1.0,
+    "Chimneys / Tanks (Square)": 0.90,
+    "Chimneys / Tanks (Hexagonal)": 0.95,
+    "Chimneys / Tanks (Octagonal)": 1.0,
+    "Chimneys / Tanks (Round)": 1.0,
+    "Solid Freestanding Walls or Signs": 0.85,
+    "Open Signs / Single-Plane Frames": 0.85,
+    "Trussed Tower (Triangular / Rectangular)": 0.85,
+    "Trussed Tower (Other Cross Sections)": 0.95
+}
+structure_selection = st.selectbox("Choose structure type:", list(structure_types.keys()))
+Kd = structure_types[structure_selection]
+st.info(f"**Selected Kd = {Kd:.2f}**")
+
+# --- Surface Roughness / Exposure Category ---
+st.subheader("Select Exposure Category (Surface Roughness)")
+exposure_options = ["B", "C", "D"]
+exposure = st.selectbox("Exposure Category:", exposure_options, index=1)
+st.caption("Exposure B = urban/suburban, C = open terrain, D = flat/coastal areas")
+
+# --- Compute Kz from Table 26.10-1 ---
+def get_kz(height_ft, exposure):
+    # Table 26.10-1 (ASCE 7-16)
+    table = {
+        "B": {15: 0.57, 20: 0.62, 25: 0.66, 30: 0.70, 40: 0.76, 50: 0.81, 60: 0.85, 70: 0.89, 80: 0.93, 90: 0.96, 100: 0.99, 120: 1.04, 140: 1.09, 160: 1.13, 200: 1.20, 250: 1.28, 300: 1.35, 350: 1.41, 400: 1.47, 450: 1.52, 500: 1.56},
+        "C": {15: 0.85, 20: 0.90, 25: 0.94, 30: 0.98, 40: 1.04, 50: 1.09, 60: 1.13, 70: 1.17, 80: 1.21, 90: 1.24, 100: 1.26, 120: 1.31, 140: 1.36, 160: 1.39, 200: 1.46, 250: 1.53, 300: 1.59, 350: 1.64, 400: 1.69, 450: 1.73, 500: 1.77},
+        "D": {15: 1.03, 20: 1.08, 25: 1.12, 30: 1.16, 40: 1.22, 50: 1.27, 60: 1.31, 70: 1.34, 80: 1.38, 90: 1.40, 100: 1.43, 120: 1.48, 140: 1.52, 160: 1.55, 200: 1.61, 250: 1.68, 300: 1.73, 350: 1.78, 400: 1.82, 450: 1.86, 500: 1.89}
+    }
+
+    h = min(max(height_ft, 15), 500)
+    heights = sorted(table[exposure].keys())
+
+    # Linear interpolation
+    for i in range(len(heights)-1):
+        h1, h2 = heights[i], heights[i+1]
+        if h1 <= h <= h2:
+            k1, k2 = table[exposure][h1], table[exposure][h2]
+            return k1 + (k2 - k1) * ((h - h1) / (h2 - h1))
+    return table[exposure][500]
+
+Kz = get_kz(height, exposure)
+st.success(f"Kz (at {height:.1f} ft, Exposure {exposure}) = **{Kz:.3f}**")
+
+# --- Constants ---
+Kzt = 1.0
+Ke = 1.0
+
+# --- Wind Pressure Calculation ---
+q = 0.00256 * Kz * Kzt * Kd * Ke * (V ** 2)
+
+st.markdown("### 💨 Calculated Velocity Pressure")
+st.metric(label="q (psf)", value=f"{q:.2f}")
+
+# --- Output breakdown ---
+st.markdown(f"""
+| Factor | Symbol | Value | Description |
+|:--------|:--------|:--------|:-------------|
+| Velocity Pressure Exposure Coefficient | Kz | {Kz:.3f} | Based on height and exposure |
+| Topographic Factor | Kzt | {Kzt:.2f} | Default per ASCE 7-16 |
+| Directionality Factor | Kd | {Kd:.2f} | From Table 26.6-1 |
+| Ground Elevation Factor | Ke | {Ke:.2f} | Default |
+| Basic Wind Speed | V | {V:.1f} mph | From ASCE Hazard Tool |
+| **Velocity Pressure** | **q** | **{q:.2f} psf** | — |
+""")
