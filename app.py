@@ -4,6 +4,10 @@ import urllib.parse
 import requests
 import json
 import openai
+import tabula
+import pandas as pd
+import io
+
 
 st.set_page_config(page_title="Wind Load Calculator", layout="centered")
 
@@ -113,49 +117,66 @@ state = st.selectbox("Select the project location (State):", states)
 
 st.write(f"You selected: **{state}**")
 
-if st.button("Lookup Codes for State"):
-    st.info(f"Looking up codes for {state}…")
+# URL for the ICC adoption chart PDF
+PDF_URL = "https://www.iccsafe.org/wp-content/uploads/Master-I-Code-Adoption-Chart-1.pdf"
 
-    # 1) Lookup state building code adoption (placeholder)
-    # (You might load a CSV/JSON of ICC adoption chart)
-    building_code_edition = lookup_state_building_code(state)  # e.g., "IBC 2021"
-    st.write(f"Building code + date: {building_code_edition}")
+# Step 1: Download PDF
+print("📥 Downloading ICC Adoption Chart...")
+response = requests.get(PDF_URL)
+if response.status_code != 200:
+    raise Exception("Failed to download PDF from ICC website.")
+print("✅ Downloaded successfully")
 
-    # 2) IBC edition (assume if building_code_edition is IBC, else you may lookup state commercial vs residential)
-    ibc_edition = building_code_edition if "IBC" in building_code_edition else lookup_state_ibc(state)
-    st.write(f"Relevant IBC edition: {ibc_edition}")
+# Step 2: Parse PDF table using tabula
+# Note: Java is required for tabula-py
+print("📊 Extracting tables...")
+tables = tabula.read_pdf(io.BytesIO(response.content), pages="all", multiple_tables=True)
 
-    # 3) From IBC edition, determine referenced ASCE 7 edition
-    asce7_edition = determine_asce7_for_ibc(ibc_edition)
-    st.write(f"Referenced ASCE 7 edition: {asce7_edition}")
+# Step 3: Find the main table that contains 'State' column
+main_table = None
+for t in tables:
+    if 'State' in t.columns:
+        main_table = t
+        break
 
-    # 4) Lookup IECC edition for the state
-    iecc_edition = lookup_state_iecc(state)
-    st.write(f"IECC edition: {iecc_edition}")
+if main_table is None:
+    raise Exception("Could not find table with 'State' column. Check PDF structure.")
 
-    # 5) Map IECC → ASHRAE 90.1 edition
-    ashrae901_edition = map_iecc_to_ashrae(iecc_edition)
-    st.write(f"ASHRAE 90.1 edition: {ashrae901_edition}")
+print("✅ Found main state table")
 
-    # Optionally: Use an LLM to verify or flesh out details
-    prompt = f"""For the U.S. state {state}, provide:
-    - the adopted building code (model code) and date/year
-    - the adopted IBC edition and year
-    - the ASCE 7 edition cited by that IBC
-    - the adopted IECC edition for that state
-    - the ASHRAE 90.1 edition associated with that IECC
+# Step 4: Clean up the DataFrame
+df = main_table.copy()
+df.columns = [str(c).strip() for c in df.columns]
+df = df.dropna(subset=["State"])
+df["State"] = df["State"].str.strip()
 
-    Provide your answers in a bullet list."""
-    response = openai.ChatCompletion.create(
-        model="gpt-4o",
-        messages=[
-            {"role":"system", "content":"You are a building-codes lookup assistant."},
-            {"role":"user", "content":prompt}
-        ],
-        temperature=0.2,
-    )
-    st.write("LLM response:")
-    st.write(response.choices[0].message.content)
+# Step 5: Extract relevant columns
+# Some PDFs label columns slightly differently; adjust as needed
+cols = [c for c in df.columns if "IBC" in c or "IECC" in c or c == "State"]
+df = df[cols]
+
+# Step 6: Create dictionary
+code_data = {}
+for _, row in df.iterrows():
+    state = row["State"]
+    ibc = str(row[[c for c in row.index if "IBC" in c][0]]) if any("IBC" in c for c in row.index) else None
+    iecc = str(row[[c for c in row.index if "IECC" in c][0]]) if any("IECC" in c for c in row.index) else None
+
+    code_data[state] = {
+        "IBC": f"IBC {ibc}" if ibc and ibc != "nan" else None,
+        "IECC": f"IECC {iecc}" if iecc and iecc != "nan" else None,
+    }
+
+# Step 7: Save to JSON
+with open("icc_code_adoption.json", "w") as f:
+    json.dump(code_data, f, indent=2)
+
+print("💾 Saved parsed adoption data to icc_code_adoption.json")
+
+# Step 8 (optional): Show sample output
+sample_states = list(code_data.keys())[:5]
+for s in sample_states:
+    print(f"{s}: {code_data[s]}")
 
 
 # location = st.text_input("📍 Enter Project Location (City, State or ZIP):", placeholder="e.g., Chicago, IL or 77002")
