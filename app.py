@@ -50,43 +50,69 @@ def ft_in(value):
 
 st.subheader("📦 Building Shape Visualization")
 
-# 8 corner points of the cuboid
+# 8 cube vertices
 x = [0, least_width, least_width, 0, 0, least_width, least_width, 0]
 y = [0, 0, longest_width, longest_width, 0, 0, longest_width, longest_width]
 z = [0, 0, 0, 0, height, height, height, height]
 
-# Triangular faces of the cuboid (2 triangles per rectangular face)
+# Triangular faces of the cuboid
 i = [0, 0, 0, 1, 1, 2, 3, 4, 4, 5, 6, 7]
 j = [1, 2, 3, 2, 5, 3, 7, 5, 6, 6, 7, 4]
 k = [5, 3, 4, 5, 6, 7, 4, 6, 7, 4, 4, 5]
 
-# Create a single Mesh3d
+# Create the 3D cube mesh
 fig = go.Figure(data=[
     go.Mesh3d(
         x=x, y=y, z=z,
         i=i, j=j, k=k,
         color='lightblue',
         opacity=1.0,
-        flatshading=True
+        flatshading=True,
+        name='Building',
+        showlegend=False
     )
 ])
 
-# Optional: add black edge wireframe for clarity
+# Add wireframe edges (hidden from legend)
 edges = [
     (0,1), (1,2), (2,3), (3,0),  # bottom
     (4,5), (5,6), (6,7), (7,4),  # top
-    (0,4), (1,5), (2,6), (3,7)   # sides
+    (0,4), (1,5), (2,6), (3,7)   # verticals
 ]
-
 for e in edges:
     fig.add_trace(go.Scatter3d(
         x=[x[e[0]], x[e[1]]],
         y=[y[e[0]], y[e[1]]],
         z=[z[e[0]], z[e[1]]],
         mode='lines',
-        line=dict(color='black', width=4)
+        line=dict(color='black', width=4),
+        showlegend=False
     ))
 
+# Add 3D dimension labels
+fig.add_trace(go.Scatter3d(
+    x=[least_width/2], y=[-5], z=[0],
+    mode='text',
+    text=[f"Width: {ft_in(least_width)}"],
+    textposition="bottom center",
+    showlegend=False
+))
+fig.add_trace(go.Scatter3d(
+    x=[-5], y=[longest_width/2], z=[0],
+    mode='text',
+    text=[f"Length: {ft_in(longest_width)}"],
+    textposition="bottom center",
+    showlegend=False
+))
+fig.add_trace(go.Scatter3d(
+    x=[0], y=[0], z=[height + 5],
+    mode='text',
+    text=[f"Height: {ft_in(height)}"],
+    textposition="top center",
+    showlegend=False
+))
+
+# Layout cleanup
 fig.update_layout(
     scene=dict(
         xaxis=dict(visible=False),
@@ -95,19 +121,14 @@ fig.update_layout(
         aspectmode='data'
     ),
     paper_bgcolor="white",
-    plot_bgcolor="white",
-    width=700,
-    height=500,
-    margin=dict(r=10, l=10, b=10, t=10)
+    margin=dict(r=10, l=10, b=10, t=10),
+    showlegend=False
 )
-
-# Add text annotations for dimensions
-fig.add_annotation(text=f"Width: {ft_in(least_width)}", xref="paper", yref="paper", x=0.2, y=-0.1, showarrow=False)
-fig.add_annotation(text=f"Length: {ft_in(longest_width)}", xref="paper", yref="paper", x=0.8, y=-0.1, showarrow=False)
-fig.add_annotation(text=f"Height: {ft_in(height)}", xref="paper", yref="paper", x=0.5, y=1.05, showarrow=False)
 
 st.plotly_chart(fig, use_container_width=True)
 st.markdown("---")
+
+
 # ----------------------------------------------------
 # 2️⃣  Code Jurisdiction / Adoption Lookup
 # ----------------------------------------------------
