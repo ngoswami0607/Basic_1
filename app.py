@@ -277,16 +277,9 @@ st.success(f"Using V = {V:.1f} mph")
 st.markdown("---") 
 
 # ----------------------------------------------------
-# 5️⃣ BASIC WIND PRESSURE CALCULATION (ASCE 7-16)
+# 5️⃣ BASIC WIND PRESSURE CALCULATION (ASCE 7)
 # ----------------------------------------------------
-st.header("5️⃣ Basic Wind Pressure Calculation (ASCE 7-16)")
-
-st.markdown("""
-### Formula
-\\[
-q = 0.00256 \\times K_z \\times K_{zt} \\times K_d \\times K_e \\times V^2
-\\]
-""")
+st.header("5️⃣ Basic Wind Pressure Calculation (ASCE 7)")
 
 # --- Select Structure Type for Kd ---
 st.subheader("Select Structure Type (for Kd)")
