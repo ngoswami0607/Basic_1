@@ -1,7 +1,12 @@
 import streamlit as st
 import requests
+import plotly.graph_objects as go 
 import pdfplumber
 import pandas as pd
+import io
+import urllib.parse 
+import json 
+import openai 
 import io
 
 # --- Function to extract ICC adoption data directly from the PDF ---
