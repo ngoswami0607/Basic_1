@@ -2,7 +2,7 @@ import streamlit as st
 import plotly.graph_objects as go
 import requests
 import json
-#import tabula
+import tabula
 import pandas as pd
 import io
 
