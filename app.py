@@ -279,6 +279,7 @@ st.markdown("---")
 # ----------------------- 
 # SUMMARY OUTPUT
 # ----------------------- 
-st.markdown("---") st.header("✅ Summary of Inputs")
+st.markdown("---") 
+st.header("✅ Summary of Inputs")
 st.markdown(f""" | Parameter | Value | |------------|--------| | Least Width | {least_width} ft | | Longest Width | {longest_width} ft | | Mean Roof Height | {height} ft | | ASCE Edition | {asce_code} | | Risk Category | {risk_category} | | Basic Wind Speed | {V:.1f} mph | """) 
 st.markdown(""" You can now use these inputs for **ASCE 7 Chapter 30 (C&C)** or **Main Wind Force Resisting System** design. """)
