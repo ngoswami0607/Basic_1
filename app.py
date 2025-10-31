@@ -1,6 +1,8 @@
 import streamlit as st
 import plotly.graph_objects as go
 import urllib.parse
+import requests
+import json
 
 st.set_page_config(page_title="Wind Load Calculator", layout="centered")
 
@@ -88,51 +90,99 @@ st.plotly_chart(fig, use_container_width=True)
 
 st.markdown("---")
 
-st.header("2️⃣ Code Jurisdiction")
+st.title("Building Code Edition Lookup")
 
-location = st.text_input("📍 Enter Project Location (City, State or ZIP):", placeholder="e.g., Chicago, IL or 77002")
+# 1. User input location
+location_input = st.text_input("Enter project location (address, city/state, or ZIP)")
 
-# Placeholder function — you’ll need real API endpoint & key
-def lookup_icc_adoption(location_str, api_key):
-    # In a real implementation you'd parse the location into state/county,
-    # call the ICC “ImageCode Adoption Database” API with query parameters.
-    # Here is a dummy placeholder to illustrate.
-    try:
-        query = urllib.parse.quote(location_str)
-        url = f"https://api.iccsafe.org/adoption/v1/jurisdictions?search={query}&key={api_key}"
-        resp = requests.get(url, timeout=10)
-        if resp.status_code == 200:
-            data = resp.json()
-            if data and "items" in data and len(data["items"]) > 0:
-                # assume first item
-                adoption = data["items"][0]
-                return {
-                    "jurisdiction": adoption.get("name"),
-                    "IBC": adoption.get("code_title"),
-                    "IBC_effective": adoption.get("effective_date"),
-                }
-    except Exception as e:
-        st.error(f"Lookup failed: {e}")
-    return None
+if st.button("Lookup Codes"):
+    if not location_input:
+        st.error("Please enter a location.")
+    else:
+        # 2. Geocode (placeholder) — you’ll need your own geocoding service
+        st.info("Geocoding location …")
+        # Example: use Nominatim or other service
+        geocode_url = "https://nominatim.openstreetmap.org/search"
+        params = {"q": location_input, "format": "json"}
+        resp = requests.get(geocode_url, params=params)
+        if resp.status_code != 200 or not resp.json():
+            st.error("Could not geocode location.")
+        else:
+            geodata = resp.json()[0]
+            lat = geodata["lat"]
+            lon = geodata["lon"]
+            st.write(f"Coordinates: {lat}, {lon}")
 
-api_key = st.text_input("Enter your ICC API Key (for automated lookup)", type="password")
+            # 3. Determine jurisdiction (placeholder)
+            # Here you would map lat/lon → state/county/city
+            # For now ask user to pick state
+            state = st.selectbox("Select state for jurisdiction", ["IL","CA","TX","NY","…"])
+            
+            # 4. Query the ICC Adoption API
+            st.info("Querying code adoption database …")
+            # Replace with actual endpoint and your API key if required
+            icc_api_url = "https://api.iccsafe.org/adoption"  # placeholder
+            headers = {"Authorization": "Bearer YOUR_API_KEY_HERE"}
+            params = {"state": state, "jurisdiction": "default"}
+            adoption_resp = requests.get(icc_api_url, headers=headers, params=params)
+            if adoption_resp.status_code != 200:
+                st.error("Could not retrieve adoption data.")
+            else:
+                adoption_data = adoption_resp.json()
+                # Parse out code editions
+                # Example simplified: assume returns something like { "IBC": "2021", "IECC": "2021", "ASHRAE": "90.1-2019" }
+                st.write("Adopted code editions:")
+                for code, edition in adoption_data.items():
+                    st.write(f"- {code}: {edition}")
 
-adoption_info = None
-if location and api_key:
-    with st.spinner("Attempting to lookup code adoption..."):
-        adoption_info = lookup_icc_adoption(location, api_key)
+                # 5. Output results
+                st.success("Lookup complete.")
 
-if adoption_info:
-    st.success(f"Found jurisdiction: {adoption_info['jurisdiction']}")
-    st.write(f"Adopted IBC Edition: **{adoption_info['IBC']}** (effective {adoption_info['IBC_effective']})")
-    # As the ASCE version may not be in API, ask user manually:
-    asce_code = st.selectbox("Select applicable ASCE 7 Edition:", ["ASCE 7-10", "ASCE 7-16", "ASCE 7-22"])
-else:
-    st.info("Automatic lookup not successful. Please select code editions manually:")
-    ibc_code = st.selectbox("Select IBC Edition:", ["IBC 2015", "IBC 2018", "IBC 2021", "IBC 2024"])
-    asce_code = st.selectbox("Select applicable ASCE 7 Edition:", ["ASCE 7-10", "ASCE 7-16", "ASCE 7-22"])
+# st.header("2️⃣ Code Jurisdiction")
 
-st.write(f"Using IBC: **{ibc_code if not adoption_info else adoption_info['IBC']}**, ASCE 7: **{asce_code}**")
+# location = st.text_input("📍 Enter Project Location (City, State or ZIP):", placeholder="e.g., Chicago, IL or 77002")
+
+# # Placeholder function — you’ll need real API endpoint & key
+# def lookup_icc_adoption(location_str, api_key):
+#     # In a real implementation you'd parse the location into state/county,
+#     # call the ICC “ImageCode Adoption Database” API with query parameters.
+#     # Here is a dummy placeholder to illustrate.
+#     try:
+#         query = urllib.parse.quote(location_str)
+#         url = f"https://api.iccsafe.org/adoption/v1/jurisdictions?search={query}&key={api_key}"
+#         resp = requests.get(url, timeout=10)
+#         if resp.status_code == 200:
+#             data = resp.json()
+#             if data and "items" in data and len(data["items"]) > 0:
+#                 # assume first item
+#                 adoption = data["items"][0]
+#                 return {
+#                     "jurisdiction": adoption.get("name"),
+#                     "IBC": adoption.get("code_title"),
+#                     "IBC_effective": adoption.get("effective_date"),
+#                 }
+#     except Exception as e:
+#         st.error(f"Lookup failed: {e}")
+#     return None
+
+# api_key = st.text_input("Enter your ICC API Key (for automated lookup)", type="password")
+
+# adoption_info = None
+# if location and api_key:
+#     with st.spinner("Attempting to lookup code adoption..."):
+#         adoption_info = lookup_icc_adoption(location, api_key)
+
+# if adoption_info:
+#     st.success(f"Found jurisdiction: {adoption_info['jurisdiction']}")
+#     st.write(f"Adopted IBC Edition: **{adoption_info['IBC']}** (effective {adoption_info['IBC_effective']})")
+#     # As the ASCE version may not be in API, ask user manually:
+#     asce_code = st.selectbox("Select applicable ASCE 7 Edition:", ["ASCE 7-10", "ASCE 7-16", "ASCE 7-22"])
+# else:
+#     st.info("Automatic lookup not successful. Please select code editions manually:")
+#     ibc_code = st.selectbox("Select IBC Edition:", ["IBC 2015", "IBC 2018", "IBC 2021", "IBC 2024"])
+#     asce_code = st.selectbox("Select applicable ASCE 7 Edition:", ["ASCE 7-10", "ASCE 7-16", "ASCE 7-22"])
+
+# st.write(f"Using IBC: **{ibc_code if not adoption_info else adoption_info['IBC']}**, ASCE 7: **{asce_code}**")
 # -----------------------
 # 3. RISK CATEGORY
 # -----------------------
