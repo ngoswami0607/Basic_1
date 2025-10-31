@@ -112,10 +112,6 @@ state = st.selectbox("Select the project location (State):", states)
 
 st.write(f"You selected: **{state}**")
 
-if location_input:
-    st.info("Select the project’s state (based on the location above):")
-    state = st.selectbox("State:", states)
-
 # location = st.text_input("📍 Enter Project Location (City, State or ZIP):", placeholder="e.g., Chicago, IL or 77002")
 
 # # Placeholder function — you’ll need real API endpoint & key
