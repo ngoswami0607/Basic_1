@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 import urllib.parse
 import requests
 import json
+import openai
 
 st.set_page_config(page_title="Wind Load Calculator", layout="centered")
 
@@ -111,6 +112,51 @@ st.title("Building Code Lookup by State")
 state = st.selectbox("Select the project location (State):", states)
 
 st.write(f"You selected: **{state}**")
+
+if st.button("Lookup Codes for State"):
+    st.info(f"Looking up codes for {state}…")
+
+    # 1) Lookup state building code adoption (placeholder)
+    # (You might load a CSV/JSON of ICC adoption chart)
+    building_code_edition = lookup_state_building_code(state)  # e.g., "IBC 2021"
+    st.write(f"Building code + date: {building_code_edition}")
+
+    # 2) IBC edition (assume if building_code_edition is IBC, else you may lookup state commercial vs residential)
+    ibc_edition = building_code_edition if "IBC" in building_code_edition else lookup_state_ibc(state)
+    st.write(f"Relevant IBC edition: {ibc_edition}")
+
+    # 3) From IBC edition, determine referenced ASCE 7 edition
+    asce7_edition = determine_asce7_for_ibc(ibc_edition)
+    st.write(f"Referenced ASCE 7 edition: {asce7_edition}")
+
+    # 4) Lookup IECC edition for the state
+    iecc_edition = lookup_state_iecc(state)
+    st.write(f"IECC edition: {iecc_edition}")
+
+    # 5) Map IECC → ASHRAE 90.1 edition
+    ashrae901_edition = map_iecc_to_ashrae(iecc_edition)
+    st.write(f"ASHRAE 90.1 edition: {ashrae901_edition}")
+
+    # Optionally: Use an LLM to verify or flesh out details
+    prompt = f"""For the U.S. state {state}, provide:
+    - the adopted building code (model code) and date/year
+    - the adopted IBC edition and year
+    - the ASCE 7 edition cited by that IBC
+    - the adopted IECC edition for that state
+    - the ASHRAE 90.1 edition associated with that IECC
+
+    Provide your answers in a bullet list."""
+    response = openai.ChatCompletion.create(
+        model="gpt-4o",
+        messages=[
+            {"role":"system", "content":"You are a building-codes lookup assistant."},
+            {"role":"user", "content":prompt}
+        ],
+        temperature=0.2,
+    )
+    st.write("LLM response:")
+    st.write(response.choices[0].message.content)
+
 
 # location = st.text_input("📍 Enter Project Location (City, State or ZIP):", placeholder="e.g., Chicago, IL or 77002")
 
