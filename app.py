@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 import requests
 import json
 import tabula
+pip install tabula-py
 import pandas as pd
 import io
 
