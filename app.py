@@ -95,48 +95,39 @@ st.title("Building Code Edition Lookup")
 # 1. User input location
 location_input = st.text_input("Enter project location (address, city/state, or ZIP)")
 
+st.title("Building Code Edition Lookup")
+
+location_input = st.text_input("Enter project location (city, state, or ZIP):")
+
 if st.button("Lookup Codes"):
     if not location_input:
         st.error("Please enter a location.")
     else:
-        # 2. Geocode (placeholder) — you’ll need your own geocoding service
-        st.info("Geocoding location …")
-        # Example: use Nominatim or other service
+        st.info("Geocoding location…")
+
         geocode_url = "https://nominatim.openstreetmap.org/search"
-        params = {"q": location_input, "format": "json"}
-        resp = requests.get(geocode_url, params=params)
-        if resp.status_code != 200 or not resp.json():
-            st.error("Could not geocode location.")
-        else:
-            geodata = resp.json()[0]
-            lat = geodata["lat"]
-            lon = geodata["lon"]
-            st.write(f"Coordinates: {lat}, {lon}")
+        params = {"q": location_input, "format": "json", "limit": 1}
+        headers = {"User-Agent": "streamlit-code-lookup-app"}
 
-            # 3. Determine jurisdiction (placeholder)
-            # Here you would map lat/lon → state/county/city
-            # For now ask user to pick state
-            state = st.selectbox("Select state for jurisdiction", ["IL","CA","TX","NY","…"])
-            
-            # 4. Query the ICC Adoption API
-            st.info("Querying code adoption database …")
-            # Replace with actual endpoint and your API key if required
-            icc_api_url = "https://api.iccsafe.org/adoption"  # placeholder
-            headers = {"Authorization": "Bearer YOUR_API_KEY_HERE"}
-            params = {"state": state, "jurisdiction": "default"}
-            adoption_resp = requests.get(icc_api_url, headers=headers, params=params)
-            if adoption_resp.status_code != 200:
-                st.error("Could not retrieve adoption data.")
+        try:
+            resp = requests.get(geocode_url, params=params, headers=headers, timeout=10)
+            data = resp.json()
+
+            if resp.status_code != 200 or not data:
+                st.error("Could not geocode location. Try a more specific input (e.g. 'Dallas, TX').")
             else:
-                adoption_data = adoption_resp.json()
-                # Parse out code editions
-                # Example simplified: assume returns something like { "IBC": "2021", "IECC": "2021", "ASHRAE": "90.1-2019" }
-                st.write("Adopted code editions:")
-                for code, edition in adoption_data.items():
-                    st.write(f"- {code}: {edition}")
+                geodata = data[0]
+                lat = geodata["lat"]
+                lon = geodata["lon"]
+                display_name = geodata["display_name"]
 
-                # 5. Output results
-                st.success("Lookup complete.")
+                st.success(f"✅ Geocoded: {display_name}")
+                st.write(f"Latitude: {lat}, Longitude: {lon}")
+
+                # proceed with next step (jurisdiction lookup)
+        except Exception as e:
+            st.error(f"Error occurred: {e}")
+
 
 # st.header("2️⃣ Code Jurisdiction")
 
