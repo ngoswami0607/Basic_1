@@ -42,37 +42,67 @@ st.markdown(f"""
 # ----------------------------------------------------
 # 3D CUBE VISUALIZATION
 # ----------------------------------------------------
+# Convert decimals to feet and inches
+def ft_in(value):
+    ft = int(value)
+    inches = round((value - ft) * 12)
+    return f"{ft}′-{inches}″"
+
 st.subheader("📦 Building Shape Visualization")
 
 x = [0, least_width, least_width, 0, 0, least_width, least_width, 0]
 y = [0, 0, longest_width, longest_width, 0, 0, longest_width, longest_width]
 z = [0, 0, 0, 0, height, height, height, height]
+
 faces = [
     [0,1,2,3],[4,5,6,7],[0,1,5,4],[2,3,7,6],[1,2,6,5],[0,3,7,4]
 ]
 
 fig = go.Figure()
+
+# Draw each face as opaque
 for f in faces:
     fig.add_trace(go.Mesh3d(
         x=[x[i] for i in f],
         y=[y[i] for i in f],
         z=[z[i] for i in f],
-        color='lightblue', opacity=0.5, showscale=False
+        color='lightblue',
+        opacity=1.0,          # 👈 Fully opaque
+        flatshading=True,
+        showscale=False
     ))
 
+# Remove all axes, grids, and backgrounds
 fig.update_layout(
     scene=dict(
-        xaxis_title='Width (ft)', yaxis_title='Length (ft)', zaxis_title='Height (ft)',
-        aspectmode='data',
-        xaxis=dict(nticks=4, backgroundcolor="white"),
-        yaxis=dict(nticks=4, backgroundcolor="white"),
-        zaxis=dict(nticks=4, backgroundcolor="white"),
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False),
+        zaxis=dict(visible=False),
+        aspectmode='data'
     ),
-    width=600, height=500, margin=dict(r=10, l=10, b=10, t=10)
+    paper_bgcolor="white",
+    plot_bgcolor="white",
+    width=600,
+    height=500,
+    margin=dict(r=10, l=10, b=10, t=10)
 )
+
+# Add dimension text annotations
+fig.add_annotation(
+    text=f"Width: {ft_in(least_width)}",
+    xref="paper", yref="paper", x=0.2, y=-0.1, showarrow=False, font=dict(size=12)
+)
+fig.add_annotation(
+    text=f"Length: {ft_in(longest_width)}",
+    xref="paper", yref="paper", x=0.8, y=-0.1, showarrow=False, font=dict(size=12)
+)
+fig.add_annotation(
+    text=f"Height: {ft_in(height)}",
+    xref="paper", yref="paper", x=0.5, y=1.05, showarrow=False, font=dict(size=12)
+)
+
 st.plotly_chart(fig, use_container_width=True)
 st.markdown("---")
-
 # ----------------------------------------------------
 # 2️⃣  Code Jurisdiction / Adoption Lookup
 # ----------------------------------------------------
