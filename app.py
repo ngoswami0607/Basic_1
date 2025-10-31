@@ -258,3 +258,27 @@ else:
 
 st.markdown("---")
 st.caption("Data Source: [ICC Master I-Code Adoption Chart](https://www.iccsafe.org/wp-content/uploads/Master-I-Code-Adoption-Chart-1.pdf)")
+
+# ----------------------- 
+# 3. RISK CATEGORY 
+# ----------------------- 
+st.header("3️⃣ Risk Category") 
+risk_map = { "I": "Low risk to human life (e.g., storage, barns).", "II": "Typical occupancy (residential, commercial, offices).", "III": "Substantial hazard to human life (schools, large assemblies).", "IV": "Essential facilities (hospitals, emergency services)." } 
+risk_category = st.selectbox( "Select Risk Category:", list(risk_map.keys()), format_func=lambda x: f"Category {x} – {risk_map[x].split('(')[0]}" ) 
+st.info(risk_map[risk_category]) 
+
+# ----------------------- 
+# 4. WIND SPEED 
+# ----------------------- 
+st.header("4️⃣ Wind Speed") 
+st.markdown(""" Get your project’s **basic wind speed (V)** from the official ASCE Hazard Tool: 👉 [https://ascehazardtool.org/](https://ascehazardtool.org/) """) 
+V = st.number_input("Enter Basic Wind Speed (mph):", min_value=0.0, value=115.0, format="%.1f") 
+st.success(f"Using V = {V:.1f} mph") 
+st.markdown("---") 
+
+# ----------------------- 
+# SUMMARY OUTPUT
+# ----------------------- 
+st.markdown("---") st.header("✅ Summary of Inputs")
+st.markdown(f""" | Parameter | Value | |------------|--------| | Least Width | {least_width} ft | | Longest Width | {longest_width} ft | | Mean Roof Height | {height} ft | | ASCE Edition | {asce_code} | | Risk Category | {risk_category} | | Basic Wind Speed | {V:.1f} mph | """) 
+st.markdown(""" You can now use these inputs for **ASCE 7 Chapter 30 (C&C)** or **Main Wind Force Resisting System** design. """)
